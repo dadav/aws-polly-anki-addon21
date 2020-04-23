@@ -1,6 +1,8 @@
 # ankipo
 This addon let's you add audio from (aws) polly to your deck.
 
+[Ankiweb(2090845100)](https://ankiweb.net/shared/info/2090845100)
+
 ## config
 ```json
 {
