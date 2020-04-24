@@ -78,6 +78,9 @@ def add_sound_to_field(note, fieldname, file_path):
 
 
 def please_say(text):
+    """
+    Gets the audio files from amazon
+    """
     cfg = mw.addonManager.getConfig(__name__)
     polly_client = boto3.Session(
                     aws_access_key_id=cfg['access_id'],
@@ -115,4 +118,5 @@ def please_say(text):
     return None
 
 
+# add the button
 gui_hooks.editor_did_init_buttons.append(add_audio_button)
