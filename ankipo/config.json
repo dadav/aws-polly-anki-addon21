@@ -2,8 +2,10 @@
   "access_id": "",
   "access_key": "",
   "audio_field": "audio",
-  "engine": "neural",
-  "txt_field": "text",
+  "engine": "standard",
+  "query_fields": ["text"],
+  "query_fields_seperator": "<break/>",
+  "template": "{text}",
   "region": "eu-west-1",
   "voice": ""
 }

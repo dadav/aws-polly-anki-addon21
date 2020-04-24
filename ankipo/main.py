@@ -10,6 +10,7 @@ from contextlib import closing
 from aqt import gui_hooks
 from aqt import mw
 from anki.media import MediaManager
+from aqt.utils import showInfo
 
 
 def slugify(value, allow_unicode=False):
@@ -32,8 +33,44 @@ def button_pressed(self):
     The button hook
     """
     cfg = mw.addonManager.getConfig(__name__)
-    txt = self.note.fields[field_name_to_idx(self.note, cfg["txt_field"])]
-    audio = please_say(txt)
+
+    # holds the data which will be used to fill the template
+    data = dict()
+
+    # just a list of all field values
+    values = list()
+
+    for field in cfg["query_fields"]:
+        try:
+            field_value = self.note.fields[field_name_to_idx(self.note, field)]
+        except Exception:
+            showInfo('Could not get a value for field %s' % field)
+            return
+
+        if field_value:
+            data.update({field: field_value})
+            values.append(field_value)
+
+    # add a combined variable, so the user can use {combined} in their template
+    seperator = cfg.get('query_fields_seperator', '<break />')
+    data.update({'combined': seperator.join(values)})
+
+    # if the user nulled the template, use the combined value
+    template = cfg.get('template', '{combined}')
+    txt_to_speak = template.format(**data)
+
+    if not txt_to_speak:
+        showInfo('Give me something to say...')
+        return
+
+    # check if the parsed template contains ssml stuff and set the text type
+    is_ssml = '<' in txt_to_speak or '>' in txt_to_speak
+    if is_ssml and not txt_to_speak.startswith('<speak>'):
+        txt_to_speak = '<speak>' + txt_to_speak + '</speak>'
+    text_type = 'ssml' if is_ssml else 'text'
+
+    # get the audio
+    audio = please_say(txt_to_speak, text_type)
     if audio is not None:
         add_sound_to_field(self.note, cfg['audio_field'], audio)
         self.loadNoteKeepingFocus()
@@ -77,7 +114,7 @@ def add_sound_to_field(note, fieldname, file_path):
     return filename
 
 
-def please_say(text):
+def please_say(text, text_type='text'):
     """
     Gets the audio files from amazon
     """
@@ -92,6 +129,7 @@ def please_say(text):
         response = polly_client.synthesize_speech(VoiceId=cfg['voice'],
                         OutputFormat='mp3',
                         Text = text,
+                        TextType = text_type,
                         Engine = cfg['engine'])
     except (BotoCoreError, ClientError) as error:
         logging.error(error)
