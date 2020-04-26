@@ -82,7 +82,7 @@ def add_audio_button(buttons, editor):
     """
     buttons.append(
         editor.addButton(icon="paperclip", cmd="add_audio",
-                         func=button_pressed, label="Add audio"),
+                         func=button_pressed, label="Add polly"),
     )
     return buttons
 
